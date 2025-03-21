@@ -10,7 +10,7 @@ install_deps:
 
     # windows
     rustup target add x86_64-pc-windows-gnu
-    rustup target add aarch64-pc-windows-gnu
+    #    rustup target add aarch64-pc-windows-gnu
 
     # android
     rustup target add x86_64-linux-android
@@ -25,7 +25,6 @@ release:
     cargo zigbuild --target x86_64-unknown-linux-gnu --release
     cargo zigbuild --target aarch64-unknown-linux-gnu --release
     cargo zigbuild --target x86_64-pc-windows-gnu --release
-    cargo zigbuild --target aarch64-pc-windows-gnu --release
 
 # build for Android
 android:
@@ -33,15 +32,16 @@ android:
     cargo ndk -t x86_64 build --release
 
 # package output .so/.dll with .info into zip
-package platform target ext:
+package platform target ext bin:
     mkdir -p dist/{{platform}}
-    cp target/{{target}}/release/libgametank_libretro.{{ext}} dist/{{platform}}/gametank_libretro.{{ext}}
+    cp target/{{target}}/release/{{bin}}.{{ext}} dist/{{platform}}/gametank_libretro.{{ext}}
     cp gametank_libretro.info dist/{{platform}}/
     cd dist/{{platform}} && zip ../gametank-core-{{platform}}.zip gametank_libretro.{{ext}} gametank_libretro.info
 
 # package all builds
-package-all:
-    just package linux-x64 x86_64-unknown-linux-gnu so
-    just package linux-arm64 aarch64-unknown-linux-gnu so
-    just package win-x64 x86_64-pc-windows-gnu dll
-    just package android-arm64 android/arm64-v8a so
+package-all: release android
+    just package linux-x64 x86_64-unknown-linux-gnu so libgametank_libretro
+    just package linux-arm64 aarch64-unknown-linux-gnu so libgametank_libretro
+    just package win-x64 x86_64-pc-windows-gnu dll gametank_libretro
+    just package android-arm64 aarch64-linux-android so libgametank_libretro
+

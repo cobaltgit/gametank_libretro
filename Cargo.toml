@@ -8,7 +8,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 gametank-emulator-core = {path="../gametank-emulator-core"}
-rtrb = "0.3"
 
 [dependencies.libretro-rs]
 git = "https://github.com/libretro-rs/libretro-rs"

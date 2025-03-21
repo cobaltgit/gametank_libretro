@@ -15,7 +15,6 @@ use libretro_rs::prelude::env::{GetAvInfo, Init, Reset, Run, UnloadGame};
 
 struct CoreEmulator {
     emu: Emulator<InstantClock>,
-    audio_consumer: rtrb::Consumer<u8>,
     rendering_mode: Option<SoftwareRenderEnabled>,
     // game_data: Option<GameData>,
     input_bindings: HashMap<(c_uint, JoypadButton), InputCommand>,
@@ -40,8 +39,6 @@ impl TimeDaemon for InstantClock {
 impl Default for CoreEmulator {
     fn default() -> Self {
         let clock = InstantClock { instant: Instant::now() };
-        // if you go past 4096, you're boned anyway
-        let (producer, consumer) = rtrb::RingBuffer::new(4096);
 
         let mut input_bindings = HashMap::new();
 
@@ -64,9 +61,7 @@ impl Default for CoreEmulator {
         input_bindings.insert((1, JoypadButton::X), Controller2(ControllerButton::C));
 
         Self {
-            emu: Emulator::init(clock, producer),
-            audio_consumer: consumer,
-            // game_data: None,
+            emu: Emulator::init(clock, 44100.0),
             input_bindings,
             rendering_mode: None,
             pixel_format: None,
@@ -139,12 +134,23 @@ impl<'a> Core<'a> for CoreEmulator {
                 self.emu.set_input_state(*command, KeyState::new(callbacks.is_joypad_button_pressed(DevicePort::new(*port), *button)))
             }
         }
-
-        while !self.audio_consumer.is_empty() {
-            let _ignored = self.audio_consumer.pop();
-        }
         
         self.emu.process_cycles(false);
+        if let Some(ref mut audio_out) = &mut self.emu.audio_out {
+            let mut audio_samples = Vec::with_capacity(4096);
+            while !audio_out.output_buffer.is_empty() {
+                if let Ok(buffer) = audio_out.output_buffer.pop() {
+                    // is this going to kill perf???
+                    for sample in buffer.iter() {
+                        let sample = (sample.clamp(-1.0, 1.0) * i16::MAX as f32) as i16;
+                        audio_samples.push(sample); // left
+                        audio_samples.push(sample); // right
+                    }
+                }
+            }
+
+            callbacks.upload_audio_frame(audio_samples.as_slice());
+        }
 
 
         let framebuffer = self.emu.cpu_bus.read_full_framebuffer();
