@@ -11,6 +11,7 @@ use gametank_emulator_core::color_map::COLOR_MAP;
 use gametank_emulator_core::emulator::{Emulator, PlayState, TimeDaemon};
 use gametank_emulator_core::inputs::{ControllerButton, InputCommand, KeyState};
 use gametank_emulator_core::inputs::InputCommand::{Controller1, Controller2};
+use gametank_emulator_core::inputs::KeyState::{JustPressed, JustReleased};
 use libretro_rs::prelude::env::{GetAvInfo, Init, Reset, Run, UnloadGame};
 
 struct CoreEmulator {
@@ -49,7 +50,8 @@ impl Default for CoreEmulator {
         input_bindings.insert((0, JoypadButton::Right), Controller1(ControllerButton::Right));
         input_bindings.insert((0, JoypadButton::A), Controller1(ControllerButton::A));
         input_bindings.insert((0, JoypadButton::B), Controller1(ControllerButton::B));
-        input_bindings.insert((0, JoypadButton::X), Controller1(ControllerButton::C));
+        // input_bindings.insert((0, JoypadButton::X), Controller1(ControllerButton::C));
+        input_bindings.insert((0, JoypadButton::Y), Controller1(ControllerButton::C));
 
         input_bindings.insert((1, JoypadButton::Start), Controller2(ControllerButton::Start));
         input_bindings.insert((1, JoypadButton::Up), Controller2(ControllerButton::Up));
@@ -58,7 +60,8 @@ impl Default for CoreEmulator {
         input_bindings.insert((1, JoypadButton::Right), Controller2(ControllerButton::Right));
         input_bindings.insert((1, JoypadButton::A), Controller2(ControllerButton::A));
         input_bindings.insert((1, JoypadButton::B), Controller2(ControllerButton::B));
-        input_bindings.insert((1, JoypadButton::X), Controller2(ControllerButton::C));
+        // input_bindings.insert((1, JoypadButton::X), Controller2(ControllerButton::C));
+        input_bindings.insert((1, JoypadButton::Y), Controller1(ControllerButton::C));
 
         Self {
             emu: Emulator::init(clock, 44100.0),
@@ -138,8 +141,8 @@ impl<'a> Core<'a> for CoreEmulator {
         self.emu.process_cycles(false);
         if let Some(ref mut audio_out) = &mut self.emu.audio_out {
             let mut audio_samples = Vec::with_capacity(4096);
-            while !audio_out.output_buffer.is_empty() {
-                if let Ok(buffer) = audio_out.output_buffer.pop() {
+            while !audio_out.sink_output.is_empty() {
+                if let Ok(buffer) = audio_out.sink_output.pop() {
                     // is this going to kill perf???
                     for sample in buffer.iter() {
                         let sample = (sample.clamp(-1.0, 1.0) * i16::MAX as f32) as i16;
@@ -167,7 +170,7 @@ impl<'a> Core<'a> for CoreEmulator {
     }
 
     fn reset(&mut self, env: &mut impl Reset) {
-        todo!()
+        self.emu.input_state.insert(InputCommand::HardReset, JustReleased);
     }
 
     fn unload_game(self, env: &mut impl UnloadGame) -> Self::Init {
