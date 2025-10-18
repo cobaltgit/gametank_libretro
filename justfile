@@ -7,6 +7,7 @@ install_deps:
     # linux
     rustup target add x86_64-unknown-linux-gnu
     rustup target add aarch64-unknown-linux-gnu
+    rustup target add armv7-unknown-linux-gnueabihf
 
     # windows
     rustup target add x86_64-pc-windows-gnu
@@ -25,6 +26,7 @@ release:
     cargo zigbuild --target x86_64-unknown-linux-gnu --release
     cargo zigbuild --target aarch64-unknown-linux-gnu --release
     cargo zigbuild --target x86_64-pc-windows-gnu --release
+    cargo zigbuild --target armv7-unknown-linux-gnueabihf --release
 
 # build for Android
 android:
@@ -42,6 +44,7 @@ package platform target ext bin:
 package-all: release android
     just package linux-x64 x86_64-unknown-linux-gnu so libgametank_libretro
     just package linux-arm64 aarch64-unknown-linux-gnu so libgametank_libretro
+    just package linux-armv7 armv7-unknown-linux-gnueabihf so libgametank_libretro
     just package win-x64 x86_64-pc-windows-gnu dll gametank_libretro
     just package android-arm64 aarch64-linux-android so libgametank_libretro
 
