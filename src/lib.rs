@@ -7,11 +7,11 @@ use libretro_rs::prelude::*;
 
 use std::ffi::c_uint;
 use std::time::Instant;
-use gametank_emulator_core::color_map::COLOR_MAP;
-use gametank_emulator_core::emulator::{Emulator, PlayState, TimeDaemon};
-use gametank_emulator_core::inputs::{ControllerButton, InputCommand, KeyState};
-use gametank_emulator_core::inputs::InputCommand::{Controller1, Controller2};
-use gametank_emulator_core::inputs::KeyState::{JustPressed, JustReleased};
+use gte_core::color_map::COLOR_MAP;
+use gte_core::emulator::{Emulator, PlayState, TimeDaemon};
+use gte_core::inputs::{ControllerButton, InputCommand, KeyState};
+use gte_core::inputs::InputCommand::{Controller1, Controller2};
+use gte_core::inputs::KeyState::{JustPressed, JustReleased};
 use libretro_rs::prelude::env::{GetAvInfo, Init, Reset, Run, UnloadGame};
 
 struct CoreEmulator {
@@ -141,8 +141,8 @@ impl<'a> Core<'a> for CoreEmulator {
         self.emu.process_cycles(false);
         if let Some(ref mut audio_out) = &mut self.emu.audio_out {
             let mut audio_samples = Vec::with_capacity(4096);
-            while !audio_out.sink_output.is_empty() {
-                if let Ok(buffer) = audio_out.sink_output.pop() {
+            while !audio_out.output_buffer.is_empty() {
+                if let Ok(buffer) = audio_out.output_buffer.pop() {
                     // is this going to kill perf???
                     for sample in buffer.iter() {
                         let sample = (sample.clamp(-1.0, 1.0) * i16::MAX as f32) as i16;

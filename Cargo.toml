@@ -7,7 +7,7 @@ edition = "2021"
 crate-type = ["cdylib"]
 
 [dependencies]
-gametank-emulator-core = {path="../gametank-emulator-core"}
+gte-core = { version = "0.1.1"}
 
 [dependencies.libretro-rs]
 git = "https://github.com/libretro-rs/libretro-rs"
