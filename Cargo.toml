@@ -13,3 +13,8 @@ gte-core = { version = "0.1.1"}
 git = "https://github.com/libretro-rs/libretro-rs"
 rev = "c7f414d19d837921b8762656e53e7f1b8f892179"
 
+[profile.release]
+opt-level = 2
+codegen-units = 1
+lto = true
+strip = true
